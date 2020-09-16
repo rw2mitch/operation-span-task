@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- <?php
+            $id = $_GET['id'];
+        ?> -->
+        <title>OSPAN</title>
+        <script src="jspsych-6.1.0/jspsych.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-html-button-response.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-html-button-response-custom.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-html-keyboard-response.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-html-slider-response.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-random-equation.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-custom-buttons.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-input-reset.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-fullscreen.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-survey-text.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-survey-likert.js"></script>
+        <script src="jspsych-6.1.0/plugins/jspsych-custom-buttons.js"></script>
+        <link href="jspsych-6.1.0/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+    </head>
+    <body>
+      <!--ADDED BY BRANDON-->
+      <form id='sendtoPHP' method='post' action='server-side.php'>
+        <input type='hidden' name='put-studyid-here' id='put-studyid-here' value='' />
+        <input type='hidden' name='put-sscode-here' id='put-sscode-here' value='' />
+        <input type='hidden' name='put-data-here' id='put-data-here' value='' />
+      </form>
+    </body>
+    <script>
+    // const ss_code = <?php echo $id;?>;
+
+    function makeid(length) {
+      var result           = '';
+      var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var charactersLength = characters.length;
+      for ( var i = 0; i < length; i++ ) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+      return result;
+    }
+
+    var ss_code = makeid(8);
+
+    /*create timeline*/
+    var timeline = []; 
+    var input = '';
+    var submit = false;
+    var letter_sequence = '';
+    var num_responses = -1;
+    var error_count = 0;
+    var math_count = 0;
+    var prev_stim = '';
+    var total_math = 0;
+    var total_math_correct = 0;
+    var perfect = false;
+    var OSPAN_SCORE = 0;
+    var total_error_count = 0;
+    var total_correct = 0;
+    
+    /* make fullscreen */
+    timeline.push({
+      type: 'fullscreen',
+      fullscreen_mode: true
+    });
+
+    /*Enter participant ID */
+    var participant_number = {
+          type: 'survey-text',
+          questions: [
+            {prompt: "Enter participant number"},
+          ],
+          data: {test_part: 'participant_number'},
+          on_finish: function(data) {
+            var responses = JSON.parse(data.responses);
+            var code = responses.Q0;
+            jsPsych.data.addProperties({participantID: code});
+          }
+        };
+      timeline.push(participant_number);
+
+    /* Information Letter 1 */
+    var Information_Letter_1 = {
+      type: "html-keyboard-response",
+      stimulus: "<img src='img/Information_Letter_1.png' style=\"width:1700;height:1500px;\"></img>",
+      choices: [32],
+      prompt: "<p>Press space to continue</p>"
+    };
+    timeline.push(Information_Letter_1);
+
+    /* Information Letter 2 */
+    var Information_Letter_2 = {
+      type: "html-keyboard-response",
+      stimulus: "<img src='img/Information_Letter_2.png' style=\"width:1440;height:900;\"></img>",
+      choices: [32],
+      prompt: "<p>Press space to continue</p>"
+    };
+    timeline.push(Information_Letter_2);
+
+    /* Consent Form */
+    var consent = {
+  	  type: 'html-button-response',
+  	  stimulus: "<img src='img/Consent_Form.png' style=\"width:1440;height:900;\"></img>",
+  	  choices: ['Agree','Disagree'],
+  	  on_finish: function(data){
+    		if(data.button_pressed == 0){
+      		data.correct = true; // can add property correct by modify data object directly
+    		} else {
+      		data.correct = false;
+      		jsPsych.endExperiment("<p><font size='6'>Thank you or participating.</font></p>" +
+            "<br><br><br><br><p><font size='6'>The experiment is now over.</font></p>");
+    			}
+  			}
+		}
+		timeline.push(consent);  
+    var Income = [
+      "0 to 20,000",
+      "21,000 to 40,000", 
+      "41,000 to 60,000",
+      "61,000 to 80,000",
+      "81,000 upwards",
+      "Prefer not to answer"
+    ];
+    var oneToTen = [
+       "1 (not at all engaged)",
+       "2",
+       "3",
+       "4",
+       "5",
+       "6",
+       "7",
+       "8",
+       "9",
+       "10 (fully engaged)"
+     ];
+
+     var oneToSevenMotivation = [
+       "1 (not motivated at all)",
+       "2",
+       "3",
+       "4",
+       "5",
+       "6",
+       "7 (very motivated)"
+     ];
+
+     var oneToSevenConfidence = [
+       "1 (not confident at all)",
+       "2",
+       "3",
+       "4",
+       "5",
+       "6",
+       "7 (very confident)"
+     ];
+
+     var mind_wandering_scale = [
+       "(a)",
+       "(b)",
+       "(c)"
+     ];
+
+     var likert_scale = [
+       "Strongly Disagree",
+       "Disagree",
+       "Neutral",
+       "Agree",
+       "Strongly Agree"
+    ];
+
+     var DASS_scale = [
+       "0",
+       "1",
+       "2",
+       "3"
+     ];
+
+     var DLQ_Diet_scale = [
+       "0",
+       "1",
+       "2",
+       "3",
+       "4",
+       "5",
+       "6",
+       "7",
+       "8",
+       "9",
+       "10",
+       "11+"
+     ];
+
+     var STC_1_scale = [
+       "Less than 1 time",
+       "1-3 times",
+       "4 or more times"
+     ];
+
+     var STC_2_scale = [
+       "1 time or less",
+       "2-3 times",
+       "4 or more times"
+     ];
+
+     var STC_3_scale = [
+       "5 or more",
+       "3-4",
+       "2 or less"
+     ];
+
+     var STC_4_scale = [
+       "Less than 1 time",
+       "1-2",
+       "3 or more"
+     ];
+
+     var STC_5_scale = [
+       "3 or more times",
+       "1-2 times",
+       "Less than 1 time"
+     ];
+
+     var STC_6_scale = [
+       "Very Little",
+       "Some",
+       "Alot"
+     ];
+
+    var Income_questions = {
+      type: 'survey-likert',
+      data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'Pers_Income', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: 'N/A'},
+      questions: [
+        {prompt: "What is your annual income?", name: 'personal income', labels: Income},
+        {prompt: "What is your household income if you live with your family?", name: 'household income', labels: Income} ], 
+    };
+
+     var engagement_questions = {
+       type: 'survey-likert',
+       data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'engagement', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: 'N/A'},
+       questions: [
+         {prompt: "Overall, how engaged were you throughout this task on a scale of 1 to 10?", name: 'engagement', labels: oneToTen},
+         {prompt: "How motivated were you to perform well on the task?", name: 'motivation', labels: oneToSevenMotivation},
+         {prompt: "While you were completing this task, how confident were you in your performance?", name: 'confidence', labels: oneToSevenConfidence} ],
+     };
+
+    var mind_wandering = {
+      type: 'html-slider-response',
+      data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'mind_wandering_slider', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', responses: 'N/A'},
+      stimulus: '<p>Please answer using the sliding scale. Just before the onset of the probe you were...</p>',
+      labels: ['Completely on task', 'Completely off task'],
+    };
+
+    var mind_wandering2 = {
+       type: 'survey-likert',
+       data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'mind_wandering_mc', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: 'N/A'},
+       questions: [
+
+         {prompt: "Throughout the task were you: (a) on task, (b) thinking about your performance on the task, or (c) thinking about task-unrelated thoughts", name: 'mind wandering 2', labels: mind_wandering_scale},
+       ]
+     };
+
+    var resume = {
+      type: "html-keyboard-response",
+      stimulus: "Press any key to continue the experiment.",
+    };
+
+    //  var probe = {
+    //    timeline: [Income_questions, engagement_questions, mind_wandering, DASS_scale, DLQ_Diet_scale, STC, resume]
+    //  };
+
+    var probe = {
+       timeline: [mind_wandering]
+     };
+
+     var DASS = {
+       type: 'survey-likert',
+       data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'DASS', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: 'N/A'},
+       questions: [
+         {prompt: "I found it hard to wind down", name: '1', labels: DASS_scale},
+         {prompt: "I was aware of dryness of my mouth", name: '2', labels: DASS_scale},
+         {prompt: "I couldn't seem to experience any positive feeling at all", name: '3', labels: DASS_scale},
+         {prompt: "I experienced breathing difficulty (e.g. excessively rapid breathing, breathlessness in the absences of physical exertion)", name: '4', labels: DASS_scale},
+         {prompt: "I found it difficult to work up the initiative to do things", name: '5', labels: DASS_scale},
+         {prompt: "I tended to over-react to situations", name: '6', labels: DASS_scale},
+         {prompt: "I experienced trembling (e.g. in the hands)", name: '7', labels: DASS_scale},
+         {prompt: "I felt that I was using a lot of nervous energy", name: '8', labels: DASS_scale},
+         {prompt: "I was worried about situations in which I might panic and make a fool of myself", name: '9', labels: DASS_scale},
+         {prompt: "I felt that I had nothing to look forward to", name: '10', labels: DASS_scale},
+         {prompt: "I found myself getting agitated", name: '11', labels: DASS_scale},
+         {prompt: "I found it difficult ot relax", name: '12', labels: DASS_scale},
+         {prompt: "I felt down-hearted and blue", name: '13', labels: DASS_scale},
+         {prompt: "I was intolerant of anything that kept me from getting on with what I was doing", name: '14', labels: DASS_scale},
+         {prompt: "I felt I was close to panic", name: '15', labels: DASS_scale},
+         {prompt: "I was unable to become enthusiastic about anything", name: '16', labels: DASS_scale},
+         {prompt: "I felt I wasn't worth much as a person", name: '17', labels: DASS_scale},
+         {prompt: "I felt that I was rather touchy", name: '18', labels: DASS_scale},
+         {prompt: "I was aware of the action of my heart in the absence of physical exertion (e.g. sense of heart rate increase, heart missing a beat)", name: '19', labels: DASS_scale},
+         {prompt: "I felt scared without any good reason", name: '20', labels: DASS_scale},
+         {prompt: "I felt that life was meaningless", name: '21', labels: DASS_scale},
+         ],
+     };
+
+     var BigFive = {
+       type: 'survey-likert',
+       preamble: "On a scale from strongly disagree to strongly agree, rate how well the following statements describe you.",
+       data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'Big Five', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: 'N/A'},
+       questions: [
+         {prompt: "Is talkative", name: '1', labels: likert_scale},
+         {prompt: "Tends to find fault with others", name: '2', labels: likert_scale},
+         {prompt: "Does a thorough job", name: '3', labels: likert_scale},
+         {prompt: "Is depressed, blue", name: '4', labels: likert_scale},
+         {prompt: "Is original, comes up with new ideas", name: '5', labels: likert_scale},
+         {prompt: "Is reserved", name: '6', labels: likert_scale},
+         {prompt: "Is helpful and unselfish with other", name: '7', labels: likert_scale},
+         {prompt: "Can be somewhat careless", name: '8', labels: likert_scale},
+         {prompt: "Is relaxed, handles stress well", name: '9', labels: likert_scale},
+         {prompt: "Is curious about many different things", name: '10', labels: likert_scale},
+         {prompt: "Is full of energy", name: '11', labels: likert_scale},
+         {prompt: "Starts quarrels with others", name: '12', labels: likert_scale},
+         {prompt: "Is a reliable worker", name: '13', labels: likert_scale},
+         {prompt: "Can be tense", name: '14', labels: likert_scale},
+         {prompt: "Is ingenious, a deep thinker", name: '15', labels: likert_scale},
+         {prompt: "Generates a lot of enthusiasm", name: '16', labels: likert_scale},
+         {prompt: "Has a forgiving nature", name: '17', labels: likert_scale},
+         {prompt: "Tends to be disorganized", name: '18', labels: likert_scale},
+         {prompt: "Worries a lot", name: '19', labels: likert_scale},
+         {prompt: "Has an active imagination", name: '20', labels: likert_scale},
+         {prompt: "Tends to be quiet", name: '21', labels: likert_scale},
+         {prompt: "Is generally trusting", name: '22', labels: likert_scale},
+         {prompt: "Tends to be lazy", name: '23', labels: likert_scale},
+         {prompt: "Is emotionally stable, not easily upset", name: '24', labels: likert_scale},
+         {prompt: "Is inventive", name: '25', labels: likert_scale},
+         {prompt: "Has an assertive personality", name: '26', labels: likert_scale},
+         {prompt: "Can be cold and aloof", name: '27', labels: likert_scale},
+         {prompt: "Perseveres until the task is finished", name: '28', labels: likert_scale},
+         {prompt: "Can be moody", name: '29', labels: likert_scale},
+         {prompt: "Values artistic, aesthetic experiences", name: '30', labels: likert_scale},
+         {prompt: "Is sometimes shy, inhibited", name: '31', labels: likert_scale},
+         {prompt: "Is considerate and kind to almost everyone", name: '32', labels: likert_scale},
+         {prompt: "Does things efficiently", name: '33', labels: likert_scale},
+         {prompt: "Remains calm in tense situations", name: '34', labels: likert_scale},
+         {prompt: "Prefers work that is routine", name: '35', labels: likert_scale},
+         {prompt: "Is outgoing, sociable", name: '36', labels: likert_scale},
+         {prompt: "Is sometimes rude to others", name: '37', labels: likert_scale},
+         {prompt: "Makes plans and follows through with them", name: '38', labels: likert_scale},
+         {prompt: "Gets nervous easily", name: '39', labels: likert_scale},
+         {prompt: "Likes to reflect, play with ideas", name: '40', labels: likert_scale},
+         {prompt: "Has few artistic interests", name: '41', labels: likert_scale},
+         {prompt: "Likes to cooperate with others", name: '42', labels: likert_scale},
+         {prompt: "Is easily distracted", name: '43', labels: likert_scale},
+         {prompt: "Is sophisticated in art, music, or literature", name: '44', labels: likert_scale},
+       ],
+     };
+
+     var DLQ_Nut_a = {
+      type: 'html-slider-response',
+      preamble: "In a typical week, ow many times do you consume: [0----->35]",
+      data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'DLQ_Nut', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: "N/A"},
+      stimulus: '<p>Please answer using the sliding scale. In a typical week, how many times do you consume Junk food (e.g., chips, sweet, etc.)</p>',
+      labels: ['0', '35'],
+    };
+
+    var DLQ_Nut_b = {
+      type: 'html-slider-response',
+      preamble: "In a typical week, ow many times do you consume: [0----->35]",
+      data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'DLQ_Nut', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: "N/A"},
+      stimulus: '<p>Please answer using the sliding scale. In a typical week, how many times do you consume Fast-food/pre-packaged food (e.g., burgers, hot or cold deli meals, etc.)</p>',
+      labels: ['0', '35'],
+    };
+
+    var DLQ_Diet = {
+      type: 'survey-likert',
+      preamble: "Over the past few months:",
+      data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'DLQ_Diet', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: "N/A"},
+      questions: [
+        {prompt: "1. How many times a week did you eat fast food meals or snacks?", name: '1', labels: DLQ_Diet_scale},
+        {prompt: "2. How many servings of fruits did you eat each day? (One serving equals: 1 medium apple, 1 medium banana, 1 medium pear, 1/2 cup of berries, etc.)", name: '2', labels: DLQ_Diet_scale},
+        {prompt: "3. How many servings of vegetables did you eat each day? (One serving equals: 1/2 cup of broccoli, 1/2 cup of green beans, 1 cup of raw spinach, 1/2 cup of sweet potato, etc.)", name: '3', labels: DLQ_Diet_scale},
+        {prompt: "4. How many sodas or soft drinks (regular or diet) did you drink each day?", name: '4', labels: DLQ_Diet_scale},
+        {prompt: "5. How many times a week did you eat beans (like pinto or black beans), non-breaded chicken, or non-breaded fish?", name: '5', labels: DLQ_Diet_scale},
+        {prompt: "6. How many times a week did you eat snack chips or crackers?", name: '6', labels: DLQ_Diet_scale},
+        {prompt: "7. How many times a week did you eat desserts and other sweets?", name: '7', labels: DLQ_Diet_scale},
+        {prompt: "8. How many times a week did you prepare a meal for yourself at home that included fresh ingredients (e.g., fresh vegetables, fruits, meat, etc.)?", name: '8', labels: DLQ_Diet_scale},
+      ],
+    };
+
+    var DLQ = {
+      timeline: [DLQ_Diet, DLQ_Nut_a, DLQ_Nut_b],
+    }
+    
+    var STC = {
+       type: 'survey-likert',
+       preamble: "Over the past few months:",
+       data: {collect_data: true, Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', stimulus: 'N/A', key_press: 'N/A', test_part: 'STC', correct_response: 'N/A', new_SSD: 'N/A', correct: 'N/A', practice: 'N/A', response: 'N/A'},
+       questions: [
+         {prompt: "How many times a week did you eat fast food meals or snacks?", name: 'STC_1_1', labels: STC_1_scale},
+         {prompt: "How many times a week did you eat regular snacks chips or crackers (not low-fat)?", name: 'STC_2_6', labels: STC_2_scale},
+         {prompt: "How many times a week did you eat desserts and other sweets (not the low-fat kind)?", name: 'STC_2_7', labels: STC_2_scale},
+         {prompt: "How many servings of fruit did you eat each day?", name: 'STC_3_2', labels: STC_2_scale},
+         {prompt: "How many servings of vegetables did you eat each day?", name: 'STC_3_3', labels: STC_2_scale},
+         {prompt: "How many regular sodas or glasses of sweet tea did you drink each day?", name: 'STC_4_4', labels: STC_4_scale},
+         {prompt: "How many times a week did you eat beans (like pinto or black eans), chicken, or fish?", name: 'STC_5_5', labels: STC_5_scale},
+         {prompt: "How much margarin, butter, or meat fat do you use to season vegetables or put on potatoes, bread, or corn?", name: 'STC_6_8', labels: STC_6_scale},
+      ]
+    };
+  
+    rand_survey = jsPsych.randomization.shuffle([DASS, BigFive, DLQ, STC, Income_questions]);
+    timeline = timeline.concat(rand_survey[0], rand_survey[1], rand_survey[2], rand_survey[3], rand_survey[4]);
+   
+
+
+    /*Define instructions_1*/
+
+    var instructions = {
+      type: "html-keyboard-response",
+      stimulus: "<p> On each trial, a sequence of math problems and words will alternate. The math" + 
+        "problem will be something like: <strong> Is 10/2 + 2 = 7 ? </strong> and you will be asked to read it " +
+        "out loud (i.e., you should say <strong>Is ten divided by two plus two equal to seven? </strong>). "+
+        "After reading it out loud, you should then decide whether the given answer is correct or " +
+        "incorrect. If the problem is correct, respond yes; if the answer is incorrect, respond no.</p>"+
+        "<p>You will then see a letter. Read the letter out loud. You will then see another math problem, " +
+        "which you will read out loud and then indicate whether the answer is correct or not. Words and math problems will alternate.</p>" +
+        "<br><br><br><br>Press the spacebar to continue"
+    };
+    timeline.push(instructions);        
+
+
+    /* Define Instructions_2*/
+    var instructions_2 = {
+      type: "html-keyboard-response",
+      stimulus: "<p>At some point, you will be asked to recall all the words from the series. This means you should indicate the order in which the " +
+        "letters were presented. Being correct means that you click on the buttons in the same order the items appeared in the sequence. " +
+        "Any mistake (recalling too many items, recalling too few items, or recalling items in the wrong order) counts as incorrect. " +
+        "There is no way to correct mistakes, so be careful!</p>"+
+        "<p>Your operation span score is valid only if you are more than 85% accurate in evaluating the math problems, so try to answer " +
+        "all of those problems correctly while trying also to remember the order of the words.</p> " 
+    };
+    timeline.push(instructions_2);
+
+    /*Define Instructions_3*/
+    var instructions_3 = {
+      type: "html-keyboard-response",
+      stimulus: "<p>The experiment includes 18 trials.</p>" +
+        "<p>At the end of the experiment, you will be asked if you want to save your data to a set of global data. After you answer the " +
+        "question, a new Web page window will appear that includes a debriefing, your data, your group's data, and the global data.</p>" +
+        "<p>Press any key to begin.</p>" 
+    }; 
+    //timeline.push(instructions_3);
+
+    /* Practice Set Instructions 1 */
+    var practice_set_instructions_1 = {
+      type: "html-keyboard-response",
+      stimulus: "<p>For this practice set, letters will appear on the screen one at a time." +
+        "<br>Try to remember each letter in the order presented.</p>"+
+        "<p>After 2-3 letters have been presented, you will see a screen listing 12 possible letters.</p>" +
+        "<p>Your job is to select each letter in the order presented." +
+        "<br>To do this, use the mouse to select each letter.</p>" +
+        "<p>The letters you select will appear at the bottom of the screen.</p>"
+    };
+    timeline.push(practice_set_instructions_1);
+
+    /* Practice Set Instructions 2 */
+    var practice_set_instructions_2 = {
+      type: "html-keyboard-response",
+      stimulus: "<p>When you have selected all the letters, and they are in the correct order," +
+        "<br>hit the <strong>EXIT</strong> box at the bottom right of the screen.</p>"+
+        "<p>If you make a mistake, hit the <strong>CLEAR</strong> box to start over.</p>" +
+        "<p>If you forget one of the letters, click the BLANK box to mark the spot for the missing letter.</p>" +
+        "<p>Remember, it is very important to get the letters in the same order as you saw them." +
+        "<br>If you forget one, use the <strong>BLANK</strong> box to mark the position.</p>" +
+        "<p>Do you have any questions so far?</p>" +
+        "<p>When you're ready, click the spacebar to start the letter practice.</p>"
+    };
+    timeline.push(practice_set_instructions_2);
+
+    /* define white screen trial */
+    var blank = {
+      type: "html-keyboard-response",
+      stimulus: '<div class="graybox"></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 500,
+      data: {test_part: 'blank', collect_data: false},
+    };
+
+/* HERE WE ARE ADDING ALL THE TRIALS WE WOULD LIKE TO INCLUDE IN THE EXPERIMENT*/
+/* LETTER TRIALS*/
+  
+  var Letter_F = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>F</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  var Letter_H = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>H</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  var Letter_J = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>J</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  var Letter_K = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>K</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  var Letter_L = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>L</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  var Letter_N = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>N</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+ 
+  var Letter_P = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>P</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false}, 
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+  
+  var Letter_Q = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>Q</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  var Letter_R = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>R</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false}, 
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  var Letter_S = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>S</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+  
+  var Letter_T = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>T</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  var Letter_Y = {
+      type: "html-keyboard-response", 
+      stimulus: '<div class="graybox"><br><br><br><br><br><br><br><br><strong>Y</strong></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration:1000,
+      data: {test_part: 'letter', collect_data: false},
+      on_finish: function(data) {
+        var letter = data.stimulus.slice(61, 62);
+        letter_sequence += letter;
+      }
+    };  
+
+  /* ITEM MATH PROBLEMS*/  
+    
+    var instant_math_feedback_true = {
+      type: 'html-button-response-custom',
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      trial_duration: 500,
+      stimulus: function() {
+        return prev_stim;
+      },
+      prompt: function() {
+        var full = jsPsych.data.get().last(1).ignore('rt').ignore('trial_type').ignore('trial_index').ignore('participantID').ignore('time_elapsed').ignore('internal_node_id').ignore('stimulus').ignore('test_part').ignore('correct_response').ignore('correct').csv();
+        var cut_full = full.slice(19, 20);
+        if (cut_full == 0) {
+          return '<div class="absolute2">Correct</div>';
+        }
+        else {
+          return '<div class="absolute2">Incorrect</div>';
+        }
+      }
+    }
+
+    var instant_math_feedback_false = {
+      type: 'html-button-response-custom',
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      trial_duration: 500,
+      stimulus: function() {
+        return prev_stim;
+      },
+      prompt: function() {
+        var full = jsPsych.data.get().last(1).ignore('rt').ignore('trial_type').ignore('trial_index').ignore('participantID').ignore('time_elapsed').ignore('internal_node_id').ignore('stimulus').ignore('test_part').ignore('correct_response').ignore('correct').csv();
+        var cut_full = full.slice(19, 20);
+        if (cut_full == 1) {
+          return '<div class="absolute2">Correct</div>';
+        }
+        else {
+          return '<div class="absolute2">Incorrect</div>';
+        }
+      }
+    }
+
+    var math1 = {
+      type: 'html-button-response-custom',
+      stimulus: "(1*2) + 1 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer1 = {
+      type: "html-button-response-custom", 
+      stimulus: "3", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      data: {test_part: 'math', correct_response: 0},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = data.stimulus;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_1 = {
+      timeline: [math1, answer1]
+    }
+
+    var MathProblem_1p = {
+      timeline: [math1, answer1, instant_math_feedback_true]
+    }
+
+    var math2 = {
+      type: 'html-button-response-custom',
+      stimulus: "(1/1) - 1 = ?", 
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer2 = {
+      type: "random-equation", 
+      stimulus: "", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      correct_answer: 2,
+      data: {test_part: 'math', correct_response: 1},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = answer;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          
+        }
+      }
+    }; 
+
+    var MathProblem_2 = {
+      timeline: [math2, answer2]
+    }
+    var MathProblem_2p = {
+      timeline: [math2, answer2, instant_math_feedback_false]
+    }
+
+    var math3 = {
+      type: 'html-button-response-custom',
+      stimulus: "(7*3) - 3 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+    
+    var answer3 = {
+      type: "html-button-response-custom", 
+      stimulus: "18", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      data: {test_part: 'math', correct_response: 0},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = data.stimulus;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_3 = {
+      timeline: [math3, answer3]
+    }
+    var MathProblem_3p = {
+      timeline: [math3, answer3, instant_math_feedback_true]
+    }
+
+    var math4 = {
+      type: 'html-button-response-custom',
+      stimulus: "(4*3) + 4 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer4 = {
+      type: "html-button-response-custom", 
+      stimulus: "16", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      data: {test_part: 'math', correct_response: 0},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = data.stimulus;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_4 = {
+      timeline: [math4, answer4]
+    }
+    var MathProblem_4p = {
+      timeline: [math4, answer4, instant_math_feedback_true]
+    }
+
+    var math5 = {
+      type: 'html-button-response-custom',
+      stimulus: "(3/3) + 2 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      choices: ['CONTINUE'],
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer5 = {
+      type: "random-equation", 
+      stimulus: "", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      correct_answer: 3,
+      data: {test_part: 'math', correct_response: 1},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = answer;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_5 = {
+      timeline: [math5, answer5]
+    }
+    var MathProblem_5p = {
+      timeline: [math5, answer5, instant_math_feedback_false]
+    }
+
+
+    var math6 = {
+      type: 'html-button-response-custom',
+      stimulus: "(2*6) - 4 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer6 = {
+      type: "random-equation", 
+      stimulus: "", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      correct_answer: 8,
+      data: {test_part: 'math', correct_response: 1},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = answer;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_6 = {
+      timeline: [math6, answer6]
+    }
+    var MathProblem_6p = {
+      timeline: [math6, answer6, instant_math_feedback_false]
+    }
+
+
+    var math7 = {
+      type: 'html-button-response-custom',
+      stimulus: "(8*9) - 8 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer7 = {
+      type: "html-button-response-custom", 
+      stimulus: "64", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      data: {test_part: 'math', correct_response: 0},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = data.stimulus;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_7 = {
+      timeline: [math7, answer7]
+    }
+    var MathProblem_7p = {
+      timeline: [math7, answer7, instant_math_feedback_true]
+    }
+
+    var math8 = {
+      type: 'html-button-response-custom',
+      stimulus: "(4*5) - 5 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer8 = {
+      type: "random-equation", 
+      stimulus: "", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      correct_answer: 15,
+      data: {test_part: 'math', correct_response: 1},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = answer;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_8 = {
+      timeline: [math8, answer8]
+    }
+    var MathProblem_8p = {
+      timeline: [math8, answer8, instant_math_feedback_false]
+    }
+
+
+    var math9 = {
+      type: 'html-button-response-custom',
+      stimulus: "(4*2) + 6 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer9 = {
+      type: "html-button-response-custom", 
+      stimulus: "14", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      data: {test_part: 'math', correct_response: 0},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = data.stimulus;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_9 = {
+      timeline: [math9, answer9]
+    }
+    var MathProblem_9p = {
+      timeline: [math9, answer9, instant_math_feedback_true]
+    }
+
+    var math10 = {
+      type: 'html-button-response-custom',
+      stimulus: "(4/4) + 7 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer10 = {
+      type: "random-equation", 
+      stimulus: "", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      correct_answer: 8,
+      data: {test_part: 'math', correct_response: 1},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = answer;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_10 = {
+      timeline: [math10, answer10]
+    }
+    var MathProblem_10p = {
+      timeline: [math10, answer10, instant_math_feedback_false]
+    }
+
+
+    var math11 = {
+      type: 'html-button-response-custom',
+      stimulus: "(8*2) - 8 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer11 = {
+      type: "random-equation", 
+      stimulus: "", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      correct_answer: 8,
+      data: {test_part: 'math', correct_response: 1},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = answer;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_11 = {
+      timeline: [math11, answer11]
+    }
+    var MathProblem_11p = {
+      timeline: [math11, answer11, instant_math_feedback_false]
+    }
+
+
+    var math12 = {
+      type: 'html-button-response-custom',
+      stimulus: "(2*9) - 9 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer12 = {
+      type: "html-button-response-custom", 
+      stimulus: "9", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      data: {test_part: 'math', correct_response: 0},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = data.stimulus;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_12 = {
+      timeline: [math12, answer12]
+    }
+    var MathProblem_12p = {
+      timeline: [math12, answer12, instant_math_feedback_true]
+    }
+
+    var math13 = {
+      type: 'html-button-response-custom',
+      stimulus: "(8/2) + 9 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer13 = {
+      type: "random-equation", 
+      stimulus: "", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      correct_answer: 13,
+      data: {test_part: 'math', correct_response: 1},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = answer;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_13 = {
+      timeline: [math13, answer13]
+    }
+    var MathProblem_13p = {
+      timeline: [math13, answer13, instant_math_feedback_false]
+    }
+
+
+    var math14 = {
+      type: 'html-button-response-custom',
+      stimulus: "(3*8) - 1 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+   
+    var answer14 = {
+      type: "html-button-response-custom", 
+      stimulus: "23", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      data: {test_part: 'math', correct_response: 0},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = data.stimulus;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_14 = {
+      timeline: [math14, answer14]
+    }
+    var MathProblem_14p = {
+      timeline: [math14, answer14, instant_math_feedback_true]
+    }
+
+    var math15 = {
+      type: 'html-button-response-custom',
+      stimulus: "(6/3) + 1 = ?",
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      choices: ['CONTINUE'],
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+   
+    var answer15 = {
+      type: "html-button-response-custom", 
+      stimulus: "3", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'],
+      data: {test_part: 'math', correct_response: 0},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = data.stimulus;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_15 = {
+      timeline: [math15, answer15]
+    }
+    var MathProblem_15p = {
+      timeline: [math15, answer15, instant_math_feedback_true]
+    }
+
+    var math16 = {
+      type: 'html-button-response-custom',
+      stimulus: "(9/3) - 2 = ?",
+      button_html: ['<button class="jspsych-btn-continue">%choice%</button>'],
+      prompt: "<br><br><br><br>When you have solved the math problem, press CONTINUE.",
+      choices: ['CONTINUE'],     
+      data: {collect_data: false,  Input_sequence: 'N/A', correct_letters: 'N/A', total_letters: 'N/A', OSPAN_SCORE: 'N/A', total_correct: 'N/A', total_error_count: 'N/A', responses: 'N/A', test_part: 'math_stimulus', practice: false},
+      response_ends_trial: true,
+      trial_duration: 5000
+    }
+
+    var answer16 = {
+      type: "random-equation", 
+      stimulus: "", 
+      button_html: ['<button class="jspsych-btn-10">%choice%</button>', '<button class="jspsych-btn-12">%choice%</button>'],
+      choices: ['TRUE', 'FALSE'], 
+      correct_answer: 1,
+      data: {test_part: 'math', correct_response: 1},
+      on_finish: function(data) {
+        math_count++
+        total_math++
+        prev_stim = answer;
+        if (data.button_pressed == data.correct_response) {
+          data.correct = true;
+          total_math_correct++
+        }
+        else {
+          data.correct = false;
+          error_count++
+          total_error_count++
+        }
+      }
+    }; 
+
+    var MathProblem_16 = {
+      timeline: [math16, answer16]
+    }
+    var MathProblem_16p = {
+      timeline: [math16, answer16, instant_math_feedback_false]
+    }
+
+    var INPUT = {
+      type: 'custom-buttons',
+      stimulus: '',
+      prompt: '<div class="absolute4">Select the letters in order. Use the BLANK button to fill in the forgotten letters.</div>',
+      on_start: function() {
+        if (submit === true) {
+          jsPsych.finishTrial();
+        }
+      },
+      choices: ['F', 'H', 'J', 'K', 'L', 'N', 'P', 'Q', 'R', 'S', 'T', 'Y', 'BLANK', 'CLEAR', 'ENTER'],
+      button_html: ['<button class="jspsych-btn1">%choice%</button>', '<button class="jspsych-btn2">%choice%</button>',
+        '<button class="jspsych-btn3">%choice%</button>', '<button class="jspsych-btn4">%choice%</button>', '<button class="jspsych-btn5">%choice%</button>', '<button class="jspsych-btn6">%choice%</button>',
+        '<button class="jspsych-btn7">%choice%</button>', '<button class="jspsych-btn8">%choice%</button>', '<button class="jspsych-btn9">%choice%</button>',
+        '<button class="jspsych-btn10">%choice%</button>', '<button class="jspsych-btn11">%choice%</button>', '<button class="jspsych-btn12">%choice%</button>',
+        '<button class="jspsych-btn-blank">%choice%</button>', '<button class="jspsych-btn-clear">%choice%</button>', '<button class="jspsych-btn-submit">%choice%</button>'],
+      response_ends_trial: true,
+      on_finish: function(data) {
+        input += data.input;
+        }
+      };
+
+    var LAST_INPUT = {
+      type: 'custom-buttons',
+      stimulus: '',
+      reset_input: true,
+      data: {rt: 'N/A', responses: 'N/A', test_part: 'INPUT', practice: 'False'},
+      prompt: '<div class="absolute4">Select the letters in order. Use the BLANK button to fill in the forgotten letters.</div>',
+      choices: ['F', 'H', 'J', 'K', 'L', 'N', 'P', 'Q', 'R', 'S', 'T', 'Y', 'BLANK', 'CLEAR', 'ENTER'],
+      button_html: ['<button class="jspsych-btn1">%choice%</button>', '<button class="jspsych-btn2">%choice%</button>',
+        '<button class="jspsych-btn3">%choice%</button>', '<button class="jspsych-btn4">%choice%</button>', '<button class="jspsych-btn5">%choice%</button>', '<button class="jspsych-btn6">%choice%</button>',
+        '<button class="jspsych-btn7">%choice%</button>', '<button class="jspsych-btn8">%choice%</button>', '<button class="jspsych-btn9">%choice%</button>',
+        '<button class="jspsych-btn10">%choice%</button>', '<button class="jspsych-btn11">%choice%</button>', '<button class="jspsych-btn12">%choice%</button>',
+        '<button class="jspsych-btn-blank">%choice%</button>', '<button class="jspsych-btn-clear">%choice%</button>', '<button class="jspsych-btn-submit">%choice%</button>'],
+      on_finish: function(data) {
+        input += data.input;
+        data.OSPAN_SCORE = OSPAN_SCORE;
+        data.total_correct = total_correct;
+        data.total_error_count = total_error_count;
+        }
+      };
+
+      var LAST_INPUTp = {
+      type: 'custom-buttons',
+      stimulus: '',
+      reset_input: true,
+      data: {rt: 'N/A', responses: 'N/A', test_part: 'INPUT', practice: 'True'},
+      prompt: '<div class="absolute4">Select the letters in order. Use the BLANK button to fill in the forgotten letters.</div>',
+      choices: ['F', 'H', 'J', 'K', 'L', 'N', 'P', 'Q', 'R', 'S', 'T', 'Y', 'BLANK', 'CLEAR', 'ENTER'],
+      button_html: ['<button class="jspsych-btn1">%choice%</button>', '<button class="jspsych-btn2">%choice%</button>',
+        '<button class="jspsych-btn3">%choice%</button>', '<button class="jspsych-btn4">%choice%</button>', '<button class="jspsych-btn5">%choice%</button>', '<button class="jspsych-btn6">%choice%</button>',
+        '<button class="jspsych-btn7">%choice%</button>', '<button class="jspsych-btn8">%choice%</button>', '<button class="jspsych-btn9">%choice%</button>',
+        '<button class="jspsych-btn10">%choice%</button>', '<button class="jspsych-btn11">%choice%</button>', '<button class="jspsych-btn12">%choice%</button>',
+        '<button class="jspsych-btn-blank">%choice%</button>', '<button class="jspsych-btn-clear">%choice%</button>', '<button class="jspsych-btn-submit">%choice%</button>'],
+      on_finish: function(data) {
+        input += data.input;
+        data.OSPAN_SCORE = OSPAN_SCORE;
+        data.total_correct = total_correct;
+        data.total_error_count = total_error_count;
+        }
+      };
+
+    var reset_input = {
+      type: 'input-reset',
+      stimulus: '',
+      trial_duration: 1,
+    };
+    
+    var feedback_trial = {
+      type: 'html-keyboard-response',
+      data: {collect_data: false},
+      response_ends_trial: false,
+      choices: jsPsych.NO_KEYS,
+      stimulus: function() {
+        return "<p>You correctly recalled " + num_correct + " letter(s) out of " + length_b + "</p>" +
+        "<br><br><br><br>You made " + error_count + " math error(s) for this set of trials." + 
+        '<div class="absolute3">' + Math.round((total_math_correct/total_math)*100) + '%</div>';
+      },
+      on_finish: function() {
+        error_count = 0;
+        math_count = 0;
+      },
+      trial_duration: 1500,
+      post_trial_gap: 500,
+    }
+
+    var letter_feedback = {
+      type: 'html-keyboard-response',
+      data: {error_count: error_count, math_trials: math_count},
+      response_ends_trial: false,
+      choices: jsPsych.NO_KEYS,
+      stimulus: function() {
+        return "<p>You recalled " + num_correct + " letter(s) correct out of " + length_b + "</p>";
+      },
+      on_finish: function() {
+        error_count = 0;
+        math_count = 0;
+        total_correct = 0;
+      },
+      trial_duration: 2000,
+      post_trial_gap: 500,
+    }
+
+    var math_feedback = {
+      type: 'html-keyboard-response',
+      data: {error_count: error_count, math_trials: math_count},
+      response_ends_trial: false,
+      choices: jsPsych.NO_KEYS,
+      stimulus: function() {
+        return "<p>You made " + error_count + " math errors.</p>";
+      },
+      on_finish: function() {
+        error_count = 0;
+        math_count = 0;
+        total_error_count = 0;
+        total_math = 0;
+        total_math_correct = 0;
+      },
+      trial_duration: 2000,
+      post_trial_gap: 500,
+    }
+
+    var full_input = {
+      timeline: [INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, LAST_INPUT, reset_input, feedback_trial]
+    };
+    
+    var full_inputp = {
+      timeline: [INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, LAST_INPUTp, reset_input, feedback_trial]
+    };
+
+    var letter_input = {
+      timeline: [INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, INPUT, LAST_INPUTp, reset_input, letter_feedback]
+    }
+
+    /* Randomize letter trials*/ 
+  
+    letters = [Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y];
+    x = Math.floor(Math.random() * 12);
+    y = Math.floor(Math.random() * 12);
+    while (y === x){
+      y = Math.floor(Math.random() * 12);
+    }    
+    z = Math.floor(Math.random() * 12);
+    while(z===x || z ===y) {
+      z = Math.floor(Math.random()* 12);
+    }
+         
+    /* Add the first letter practice block */ 
+
+  timeline = timeline.concat(letters[x], blank, letters[y], blank);
+  timeline.push(letter_input);
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  timeline = timeline.concat(letters[x], blank, letters[y], blank); 
+  timeline.push(letter_input);
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  timeline = timeline.concat(letters[x], blank, letters[y], blank, letters[z], blank); 
+  timeline.push(letter_input);
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  timeline = timeline.concat(letters[x], blank, letters[y], blank, letters[z], blank); 
+  timeline.push(letter_input);
+
+  var end_letter_practice = {
+    type: 'html-keyboard-response',
+    stimulus: "End of letter practice"
+  }
+
+  /*Practice equation block*/
+
+  var practice_set_instructions_3 = {
+    type: "html-keyboard-response",
+    stimulus: "<p>Now you will practice doing the math part of the task.</p>" +
+      "<p>A math problem will appear on the screen, like this:</p>"+
+      "<p>(2*1) + 1= ?</p>" +
+      "<p>As soon as you see the math problem, you should compute the correct answer." +
+      "<br>In the above problem, the answer 3 is correct.</p>" +
+      "<p>When you know the correct answer, you will click the CONTINUE button.</p>"
+  };
+  timeline.push(practice_set_instructions_3);
+
+  /* Practice Set Instructions 4 */
+  var practice_set_instructions_4 = {
+    type: "html-keyboard-response",
+    stimulus: "<p>If the number on the screen is the correct answer to the math problem," +
+      "<br>click on the <strong>TRUE</strong> box with the mouse."+
+      "<br>If the number is not the correct answer, click on the <strong>FALSE</strong> box.</p>" +
+      "<p>For example, if you see the problem:</p>" +
+      "<p>(2*2) + 1 = ?</p>" +
+      "<p>and the number on the following screen is 5" +
+      "<br>click the TRUE box, because the answer is correct.</p>" +
+      "<p>If you see the problem:</p>" +
+      "<p>(2*2) + 1 = ?</p>" +
+      "<p>and the number on the screen is 6," +
+      "<br>click the FALSE box, because the correct answer is 5 not 6.</p>" +
+      "<p>After you click on one of the boxes, the computer will tell you if you made the right choice."
+  };
+  timeline.push(practice_set_instructions_4);
+
+  /* Practice Set Instructions 5 */
+  var practice_set_instructions_5 = {
+      type: "html-keyboard-response",
+      stimulus: "<p>It is VERY important that you get the math problems correct." +
+        "<br>It is also important that you try and solve the problem as quickly as you can.</p>"+
+        "<p>Do you have any questions?</p>" +
+        "<p>When you're ready, click the spacebar to try some practice problems.</p>"
+    };
+  timeline.push(practice_set_instructions_5);
+
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1p, MathProblem_2p, MathProblem_3p, MathProblem_4p, MathProblem_5p, MathProblem_6p, MathProblem_7p, MathProblem_8p, MathProblem_9p, MathProblem_10p, MathProblem_11p, MathProblem_12p, MathProblem_13p, MathProblem_14p, MathProblem_15p]);
+  timeline = timeline.concat([math_trials[0], math_trials[1], math_trials[2], math_trials[3], math_trials[4], math_trials[5], math_trials[6], 
+  math_trials[7], math_trials[8], math_trials[9], math_trials[10], math_trials[11], math_trials[12], math_trials[13], 
+  math_trials[14]]);
+  
+  timeline.push(math_feedback);
+
+  /*Mixed practice block*/
+
+  /* Practice Set Instructions 6 */
+  var practice_set_instructions_6 = {
+      type: "html-keyboard-response",
+      stimulus: "<p>Now you will practice doing both parts at the same time.</p>" +
+        "<p>In the next practice set, you will be given one of the math problems."+
+        "<br>Once you make your decision about the math problem," +
+        "<br>a letter will appear on the screen. Try and remember the letter.</p>" +
+        "<p>In the previous section where you only solved math problems," +
+        "<br>the computer computed your average time to solve the problems.</p>" +
+        "<p>If you take longer than your average time, the computer will automatically move you" +
+        "<br>onto the next letter part, thus skipping the True or False part and will count that" +
+        "<br>problem as a math error.</p>" +
+        "<p>Therefore it is <strong>VERY</strong> important to solve the problems as quickly and" + 
+        "<br>as accurately as possible.</p>"
+    };
+  timeline.push(practice_set_instructions_6);
+
+  timeline.push(MathProblem_1, Letter_N, blank, MathProblem_2, Letter_J, blank, full_inputp, MathProblem_3, Letter_R, blank, MathProblem_4, Letter_H, blank, full_inputp, 
+  MathProblem_5, Letter_F, blank, MathProblem_6, Letter_N, blank, full_inputp);
+  total_math = 0;
+  total_math_correct = 0;
+  var end_practice = {
+    type: 'html-keyboard-response',
+    stimulus: "End of practice"
+  }
+
+  /* Practice Set Instructions 7 */
+  var practice_set_instructions_7 = {
+    type: "html-keyboard-response",
+    on_start: function(data) {
+      jsPsych.data.get().last(61).addToAll({practice: true});
+      OSPAN_SCORE = 0;
+      total_error_count = 0;
+      total_correct = 0;
+      error_count = 0;
+      math_count = 0;
+      total_error_count = 0;
+      total_math = 0;
+      total_math_correct = 0;
+      total_correct = 0;
+    },
+    stimulus: "<p>After the letter goes away, another math problem will appear," +
+      "<br>and then another letter.</p>"+
+      "<p>At the end of each set of letters and math problems, a recall screen will appear." +
+      "<br>Use the mouse to select the letters you just saw." +
+      "<br>Try your best to get the letters in the correct order.</p>" +
+      "<p>It is important to work <strong>QUICKLY</strong> and <strong>ACCURATELY</strong> on the math." +
+      "<br>Make sure you know the answer to the math problem before clicking to the next screen." +
+      "<br>You will not be told if your answer to the math problem is correct.</p>" +
+      "<p>After the recall screen, you will be given feedback about your performance" +
+      "<br>regarding both the number of letters recalled and the percent correct on the math problems.</p>" + 
+      "<p>Do you have any questions?</p>"
+  };
+  timeline.push(practice_set_instructions_7);
+
+  /* Practice Set Instructions 8 */
+  var practice_set_instructions_8 = {
+    type: "html-keyboard-response",
+    stimulus: "<p>During the feedback, you will see a number in red in the top right of the screen." +
+      "<br>This indicates your percent correct for the math problems for the entire task.</p>"+
+      "<p>It is <strong>VERY IMPORTANT</strong> for you to keep this at least at <strong>85%.</strong>" +
+      "<br>For our purposes, we can only use data where the participant" +
+      "<br> was at least 85% accurate on the math.</p>" +
+      "<p>Therefore, in order for you to be asked to come back for future tasks," +
+      "<br>you must perform at least 85% on the math problems" +
+      "<br>WHILE doing your best to recall as many letters as possible.</p>" +
+      "<p>Do you have any questions?</p>"
+  };
+  timeline.push(practice_set_instructions_8);
+
+  /*First experimental block*/
+  /*Randomize trial lengths*/
+  possible_trial_lengths = jsPsych.randomization.shuffle([3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7]);
+
+  /*Randomize letter trials*/
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+
+  /*Randomize math trials*/
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+
+  /*Pick the first seven trials of both letter and math trials*/
+  random_1 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  
+  /*Shorten the random_7 array so it is as long as the first random trial length in the possible_trial_lengths array*/
+  cut_random_1 = random_1.slice(0, possible_trial_lengths[0]*3).concat(full_input);
+
+  /*Repeat for the next two trials of the same length*/
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_2 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_2 = random_2.slice(0, possible_trial_lengths[1]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_3 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_3 = random_3.slice(0, possible_trial_lengths[2]*3).concat(full_input);
+  
+  var block1 = jsPsych.randomization.shuffle([cut_random_1, cut_random_2, cut_random_3, probe]);
+  while (block1[0] == probe) {
+    block1 = jsPsych.randomization.shuffle([cut_random_1, cut_random_2, cut_random_3, probe]);
+  };
+  timeline = timeline.concat(block1[0], block1[1], block1[2], block1[3]);
+
+  var next_block = {
+    type: 'html-keyboard-response',
+    stimulus: "Next block"
+  }
+  timeline.push(next_block);
+
+  /* block 2: repeat block 1 except use the second randomized trial length */
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_4 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_4 = random_4.slice(0, possible_trial_lengths[3]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_5 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_5 = random_5.slice(0, possible_trial_lengths[4]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_6 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_6 = random_6.slice(0, possible_trial_lengths[5]*3).concat(full_input);
+  
+  var block2 = jsPsych.randomization.shuffle([cut_random_4, cut_random_5, cut_random_6, probe]);
+  while (block2[0] == probe) {
+     block2= jsPsych.randomization.shuffle([cut_random_4, cut_random_5, cut_random_6, probe]);
+  };
+  timeline = timeline.concat(block2[0], block2[1], block2[2], block2[3]);
+  //timeline.push(next_block);
+
+  /* block 3 */
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_7 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_7 = random_7.slice(0, possible_trial_lengths[6]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_8 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_8 = random_8.slice(0, possible_trial_lengths[7]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_9 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_9 = random_9.slice(0, possible_trial_lengths[8]*3).concat(full_input);
+  
+  var block3 = jsPsych.randomization.shuffle([cut_random_7, cut_random_8, cut_random_9, probe]);
+  while (block3[0] == probe) {
+    block3 = jsPsych.randomization.shuffle([cut_random_7, cut_random_8, cut_random_9, probe]);
+  };
+  timeline = timeline.concat(block3[0], block3[1], block3[2], block3[3]);
+  //timeline.push(next_block);
+
+  /* block 4 */
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_10 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_10 = random_10.slice(0, possible_trial_lengths[9]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_11 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_11 = random_11.slice(0, possible_trial_lengths[10]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_12 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_12 = random_12.slice(0, possible_trial_lengths[11]*3).concat(full_input);
+  
+  var block4 = jsPsych.randomization.shuffle([cut_random_10, cut_random_11, cut_random_12, probe]);
+  while (block4[0] == probe) {
+    block4 = jsPsych.randomization.shuffle([cut_random_10, cut_random_11, cut_random_12, probe]);
+  };
+  timeline = timeline.concat(block4[0], block4[1], block4[2], block4[3]);
+  //timeline.push(next_block);
+
+  /* block 5 */
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_13 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_13 = random_13.slice(0, possible_trial_lengths[12]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_14 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_14 = random_14.slice(0, possible_trial_lengths[13]*3).concat(full_input);
+  
+  letters = jsPsych.randomization.shuffle([Letter_H, Letter_F, Letter_J, Letter_K, Letter_L, Letter_N, Letter_P, Letter_Q, Letter_R, Letter_S, Letter_T, Letter_Y]);
+  math_trials = jsPsych.randomization.shuffle([MathProblem_1, MathProblem_2, MathProblem_3, MathProblem_4, MathProblem_5, MathProblem_6, MathProblem_7, MathProblem_8, MathProblem_9, MathProblem_10, MathProblem_11, MathProblem_12, MathProblem_13, MathProblem_14, MathProblem_15, MathProblem_16]);
+  random_15 = [math_trials[0], letters[0], blank, math_trials[1], letters[1], blank, math_trials[2], letters[2], blank, math_trials[3], letters[3], blank,
+   math_trials[4], letters[4], blank, math_trials[5], letters[5], blank, math_trials[6], letters[6], blank ];
+  cut_random_15 = random_15.slice(0, possible_trial_lengths[14]*3).concat(full_input);
+  
+  var block5 = jsPsych.randomization.shuffle([cut_random_13, cut_random_14, cut_random_15, probe]);
+  while (block5[0] == probe) {
+    block5 = jsPsych.randomization.shuffle([cut_random_13, cut_random_14, cut_random_15, probe]);
+  };
+  timeline = timeline.concat(block5[0], block5[1], block5[2], block5[3]);
+  timeline.push(next_block);
+
+  var final_stats = {
+    type: 'html-keyboard-response',
+    data: {collect_data: false},
+    stimulus: function() {
+      return 'OSPAN Absolute Score: ' + OSPAN_SCORE + '<p>OSPAN Total Correct: ' + total_correct + '<p>Math Total Errors: ' + total_error_count;
+  },
+  prompt: '<br><br><br>Press the spacebar to continue.',
+  }
+  timeline.push(final_stats);
+
+  /* Feedback Form 1 */
+  var Feedback_Form_1 = {
+    type: "html-keyboard-response",
+    stimulus: "<img src='img/Feedback_Form_1.png' style=\"width:1700;height:1500;\"></img>",
+    choices: [32],
+    prompt: "<p>Press space to continue</p>"
+  };
+  timeline.push(Feedback_Form_1);
+
+  /* Feedback Form 2 */
+  var Feedback_Form_2 = {
+    type: "html-keyboard-response",
+    stimulus: "<img src='img/Feedback_Form_2.png' style=\"width:1440;height:900;\"></img>",
+    choices: [32],
+    prompt: "<p>Press space to continue</p>"
+  };
+  timeline.push(Feedback_Form_2);
+
+ /*start the experiment */
+  jsPsych.init({
+    timeline: timeline,
+    on_finish: function() {
+      //subjID = jsPsych.data.get().last(1).values()[0]['participantID'];
+      final_data = jsPsych.data.get().filter({collect_data: true}).ignore('correct_response').ignore('question_order').ignore('new_SSD').ignore('input').ignore('correct').ignore('response').ignore('trial_index').ignore('key_press').ignore({test_part: 'letter'}).ignore('internal_node_id').ignore('collect_data').ignore('success').ignore('participantID').ignore('time_elapsed').localSave('csv', "SST_data_" + subjID + '.csv');
+      document.getElementById('put-studyid-here').value = 'EC3';
+      document.getElementById('put-sscode-here').value = ss_code;
+      document.getElementById('put-data-here').value = final_data;
+      //document.getElementById('put-data-here').value = [1,2,3];
+      document.getElementById('sendtoPHP').submit();
+    }
+  })
+  </script>
+</html>
